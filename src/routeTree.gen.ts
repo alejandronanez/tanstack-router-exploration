@@ -17,12 +17,14 @@ import { Route as SettingsImport } from './routes/settings'
 import { Route as SettingsPersonalImport } from './routes/settings/personal'
 import { Route as SettingsBusinessImport } from './routes/settings/business'
 import { Route as SettingsBusinessPublicImport } from './routes/settings/business/public'
-import { Route as SettingsBusinessPrivateImport } from './routes/settings/business/private'
 
 // Create Virtual Routes
 
 const AboutLazyImport = createFileRoute('/about')()
 const IndexLazyImport = createFileRoute('/')()
+const SettingsBusinessPrivateLazyImport = createFileRoute(
+  '/settings/business/private',
+)()
 
 // Create/Update Routes
 
@@ -51,13 +53,16 @@ const SettingsBusinessRoute = SettingsBusinessImport.update({
   getParentRoute: () => SettingsRoute,
 } as any)
 
+const SettingsBusinessPrivateLazyRoute =
+  SettingsBusinessPrivateLazyImport.update({
+    path: '/private',
+    getParentRoute: () => SettingsBusinessRoute,
+  } as any).lazy(() =>
+    import('./routes/settings/business/private.lazy').then((d) => d.Route),
+  )
+
 const SettingsBusinessPublicRoute = SettingsBusinessPublicImport.update({
   path: '/public',
-  getParentRoute: () => SettingsBusinessRoute,
-} as any)
-
-const SettingsBusinessPrivateRoute = SettingsBusinessPrivateImport.update({
-  path: '/private',
   getParentRoute: () => SettingsBusinessRoute,
 } as any)
 
@@ -100,18 +105,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsPersonalImport
       parentRoute: typeof SettingsImport
     }
-    '/settings/business/private': {
-      id: '/settings/business/private'
-      path: '/private'
-      fullPath: '/settings/business/private'
-      preLoaderRoute: typeof SettingsBusinessPrivateImport
-      parentRoute: typeof SettingsBusinessImport
-    }
     '/settings/business/public': {
       id: '/settings/business/public'
       path: '/public'
       fullPath: '/settings/business/public'
       preLoaderRoute: typeof SettingsBusinessPublicImport
+      parentRoute: typeof SettingsBusinessImport
+    }
+    '/settings/business/private': {
+      id: '/settings/business/private'
+      path: '/private'
+      fullPath: '/settings/business/private'
+      preLoaderRoute: typeof SettingsBusinessPrivateLazyImport
       parentRoute: typeof SettingsBusinessImport
     }
   }
@@ -123,8 +128,8 @@ export const routeTree = rootRoute.addChildren({
   IndexLazyRoute,
   SettingsRoute: SettingsRoute.addChildren({
     SettingsBusinessRoute: SettingsBusinessRoute.addChildren({
-      SettingsBusinessPrivateRoute,
       SettingsBusinessPublicRoute,
+      SettingsBusinessPrivateLazyRoute,
     }),
     SettingsPersonalRoute,
   }),
@@ -161,20 +166,20 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "settings/business.tsx",
       "parent": "/settings",
       "children": [
-        "/settings/business/private",
-        "/settings/business/public"
+        "/settings/business/public",
+        "/settings/business/private"
       ]
     },
     "/settings/personal": {
       "filePath": "settings/personal.tsx",
       "parent": "/settings"
     },
-    "/settings/business/private": {
-      "filePath": "settings/business/private.tsx",
-      "parent": "/settings/business"
-    },
     "/settings/business/public": {
       "filePath": "settings/business/public.tsx",
+      "parent": "/settings/business"
+    },
+    "/settings/business/private": {
+      "filePath": "settings/business/private.lazy.tsx",
       "parent": "/settings/business"
     }
   }
